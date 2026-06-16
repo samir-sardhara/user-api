@@ -1,158 +1,259 @@
-readme_content = """# User Management API
+# User Management API
 
-A high-performance, production-ready RESTful API built in Go using the **Fiber** web framework, a local **MySQL** database instance for persistence, and **SQLC** for generating type-safe, compile-time checked database routines.
+A RESTful User Management API built with Go, Fiber, MySQL, and SQLC.
 
-This project implements a clean, decoupled Layered Architecture focusing entirely on local native execution.
+This project follows a layered architecture with separate Handler, Service, and Repository layers for maintainability and scalability.
+
+## Features
+
+* CRUD operations for users
+* MySQL database integration
+* SQLC for type-safe database access
+* Request validation using go-playground/validator
+* Structured logging with Zap
+* Pagination support
+* Clean layered architecture
+* Middleware for request logging and latency tracking
 
 ---
 
-## 🛠 Features
+## Tech Stack
 
-* **Layered Architecture:** Strict isolation of concerns across Routing, Handlers, Services, and Repositories.
-* **Compile-Time Type-Safe SQL:** SQL queries compiled directly into native Go routines using SQLC.
-* **Pagination Engine:** Scalable page-and-limit offset retrieval strategies on collection pathways.
-* **Structured Telemetry Middleware:** Embedded unique context request IDs mapped directly with execution latency metrics via Zap logging.
-* **Input Data Validation:** Strict body payload structural schema checking using `go-playground/validator`.
+* Go
+* Fiber
+* MySQL
+* SQLC
+* Zap Logger
+* Validator
 
 ---
 
-## 📂 Project Structure
-
-Code output
-File successfully created.
+## Project Structure
 
 ```text
+.
 ├── cmd/
 │   └── server/
-│       └── main.go           # Application entrypoint & dependency injection matrix
+│       └── main.go
 ├── config/
-│   └── config.go         # Configuration loading layer (DSN management)
+│   └── config.go
 ├── db/
 │   ├── migrations/
-│   │   └── schema.sql    # Database structural DDL migrations
-│   ├── queries.sql       # Raw parameterized SQL operation queries
-│   └── sqlc/             # Auto-generated type-safe code output
+│   │   └── schema.sql
+│   ├── queries.sql
+│   └── sqlc/
 ├── internal/
-│   ├── handler/          # HTTP request binders & status code controllers
-│   ├── logger/           # Uber Zap structured log core engine
-│   ├── middleware/       # Telemetry logging & Request ID headers
-│   ├── models/           # DTO request-response schemas
-│   ├── repository/       # Direct data-store interaction methods
-│   ├── routes/           # REST URI pathway endpoint definitions
-│   └── service/          # Core business validation domain operations
-└── sqlc.yaml             # Code generation target parameters configuration
-🚀 Native Setup & Execution
-Follow these step-by-step instructions to prepare your environment and run the application natively on your machine.
+│   ├── handler/
+│   ├── logger/
+│   ├── middleware/
+│   ├── models/
+│   ├── repository/
+│   ├── routes/
+│   └── service/
+├── go.mod
+├── go.sum
+└── sqlc.yaml
+```
 
-📋 Prerequisites
-Ensure you have the following tools installed locally:
+## Prerequisites
 
-Go (v1.21+)
+Make sure the following are installed:
 
-MySQL Server (running locally on port 3306)
+* Go 1.21+
+* MySQL
+* SQLC
 
-SQLC CLI (brew install sqlc or go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest)
+Install SQLC:
 
-Step 1: Initialize the Database & Schema
-Log into your local MySQL CLI tool via your terminal:
+```bash
+go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+```
 
-Bash
+---
+
+## Database Setup
+
+Login to MySQL:
+
+```bash
 mysql -u root -p
-(Enter your local password when prompted).
+```
 
-Create the target database and execute the table schema definition:
+Create the database:
 
-SQL
--- Create the database
+```sql
 CREATE DATABASE IF NOT EXISTS userdb;
 
--- Select the target database context
 USE userdb;
 
--- Create the users structural database table
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     dob DATE NOT NULL
 );
-Type exit to leave the MySQL prompt.
+```
 
-Step 2: Generate Type-Safe Go Code
-Navigate to the project root directory (user-api/) and compile your SQL definitions into native Go database code layer files using SQLC:
+---
 
-Bash
+## Generate SQLC Code
+
+Run:
+
+```bash
 sqlc generate
-This maps your schema.sql and queries.sql into programmatic functions inside the /db/sqlc/ folder automatically.
+```
 
-Step 3: Start the Server Application
-Fetch and synchronize your package tracking modules, then execute the runtime server entrypoint framework:
+This generates type-safe Go code inside:
 
-Bash
-# Clean and pull runtime vendor dependencies
+```text
+db/sqlc/
+```
+
+---
+
+## Install Dependencies
+
+```bash
 go mod tidy
+```
 
-# Launch the server instance process loop
+---
+
+## Run the Application
+
+```bash
 go run cmd/server/main.go
-The server will boot up instantly and listen on http://localhost:3000.
+```
 
-Step 4: Run Unit Tests
-To verify internal business logic validation processing loops:
+Server starts on:
 
-Bash
-go test ./internal/service/... -v
-🛰 API Endpoints & Testing Specification
-All endpoints are accessible via http://localhost:3000.
+```text
+http://localhost:3000
+```
 
-1. Create a User
-Method: POST
+---
 
-Path: /users
+## API Endpoints
 
-Headers: Content-Type: application/json
+### Create User
 
-Payload Request Body Data:
+**POST** `/users`
 
-JSON
+Request:
+
+```json
 {
   "name": "Alice Smith",
   "dob": "1995-08-24"
 }
-2. List Users (With Pagination Parameters)
-Method: GET
+```
 
-Path: /users?page=1&limit=10
+Response:
 
-Response Payload Collection Output:
+```json
+{
+  "id": 1,
+  "name": "Alice Smith",
+  "dob": "1995-08-24"
+}
+```
 
-JSON
+---
+
+### Get User By ID
+
+**GET** `/users/:id`
+
+Example:
+
+```http
+GET /users/1
+```
+
+---
+
+### Get Users
+
+**GET** `/users?page=1&limit=10`
+
+Example Response:
+
+```json
 [
   {
     "id": 1,
     "name": "Alice Smith",
-    "dob": "1995-08-24",
-    "age": 31
+    "dob": "1995-08-24"
   }
 ]
-3. Get User By Primary Key ID
-Method: GET
+```
 
-Path: /users/:id
+---
 
-4. Update Existing User Profile
-Method: PUT
+### Update User
 
-Path: /users/:id
+**PUT** `/users/:id`
 
-Payload Request Body Data:
+Request:
 
-JSON
+```json
 {
-  "name": "Alice Thomson",
+  "name": "Alice Johnson",
   "dob": "1995-08-24"
 }
-5. Remove User From Registry
-Method: DELETE
+```
 
-Path: /users/:id
+---
 
-Expected Termination Status: 204 No Content
+### Delete User
+
+**DELETE** `/users/:id`
+
+---
+
+## Testing
+
+Run all tests:
+
+```bash
+go test ./... -v
+```
+
+Run service tests only:
+
+```bash
+go test ./internal/service/... -v
+```
+
+---
+
+## Logging
+
+The application uses Zap Logger for structured logging.
+
+Logged information includes:
+
+* HTTP method
+* Request path
+* Response status
+* Request latency
+* Application errors
+
+Example:
+
+```json
+{
+  "level":"info",
+  "msg":"HTTP Request",
+  "method":"GET",
+  "path":"/users",
+  "status":200,
+  "latency":"12ms"
+}
+```
+
+
+
+
+```
+```
